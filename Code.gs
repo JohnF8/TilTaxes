@@ -2,23 +2,13 @@ function defaultPaidField() {
   return "NO";
 }
 
-function getPeopleArr(){
-  var mySS = SpreadsheetApp.getActiveSpreadsheet();
-  var pplSheet = SpreadsheetApp.setActiveSheet(mySS.getSheetByName("People"));
-  
-  var pplRange = pplSheet.getRange("B2:B20");
-  var names = pplRange.getValues();
-  Logger.log("The names of the people are: ", names);
-  
-  Logger.log("First person: ", names[1][0]);
-}
 
 function addTransaction(e){
   addTransactionToSheet(e.values);
 }
 
 function addTransactionToSheet(eventValues){
-  //Example: [6/8/2020 20:06:24, John, Aaron, 1242, memes]
+  //Example: [6/8/2020 20:06:24, John, Aaron, 12, memes]
   var mySS = SpreadsheetApp.getActiveSpreadsheet();
   var transactionsSheet = mySS.setActiveSheet(mySS.getSheetByName("Transactions"));
   
@@ -30,16 +20,64 @@ function addTransactionToSheet(eventValues){
   var lastRow = getEmptyRow(transactionValues);
  
   
-  transactionValues[lastRow+1][0] = eventValues[0];
-  transactionValues[lastRow+1][1] = eventValues[1];
-  transactionValues[lastRow+1][2] = eventValues[2];
-  transactionValues[lastRow+1][3] = eventValues[3];
-  transactionValues[lastRow+1][4] = eventValues[4];
-  transactionValues[lastRow+1][5] = defaultPaidField();
-  
-
+  transactionValues[lastRow][0] = eventValues[0];
+  transactionValues[lastRow][1] = eventValues[1];
+  transactionValues[lastRow][2] = eventValues[2];
+  transactionValues[lastRow][3] = eventValues[3];
+  transactionValues[lastRow][4] = eventValues[4];
+  transactionValues[lastRow][5] = defaultPaidField();
   
   curRange.setValues(transactionValues);
+  
+  populateSummarySheet(transactionsSheet);
+}
+
+function populateSummarySheet(transactionsSheet){
+  Logger.log("Starting to populate the sheet");
+  
+  var listPpl = getPeopleFromSheet();
+  
+  // Iterate through all the transactions and calculate the summary of charges
+  var transactions = new Array(listPpl.length);
+  
+  //Create a 2D array
+  for(var i=0;i<transactions.length;i++){
+    transactions[i] = new Array(listPpl.length);
+  }
+  
+  for(var i=0;i<transactions.length;i++){
+    for(var j=0;j<transactions.length;j++){
+      transactions[i][j]=0;
+    }
+  }
+  
+  Logger.log("The last row is: ", transactionsSheet.getLastRow());
+  for(var i=2;i<transactionsSheet.getLastRow()+1;i++){
+    var values = transactionsSheet.getSheetValues(i, 1, 1, 6);
+    Logger.log(values);
+    if(values[0][0] === ""){
+      break;
+    }
+    Logger.log("What is being pumped: ", getIndexOfPerson(values[0][1], listPpl));
+    Logger.log("The Previous content was: ", transactions[getIndexOfPerson(values[0][1], listPpl)][getIndexOfPerson(values[0][2], listPpl)]);
+    transactions[getIndexOfPerson(values[0][1], listPpl)][getIndexOfPerson(values[0][2], listPpl)] = transactions[getIndexOfPerson(values[0][1], listPpl)][getIndexOfPerson(values[0][2], listPpl)] + values[0][3];
+    Logger.log("Transactions arr: ", transactions);
+    
+    // Write the contents to the spreadsheet
+    
+    var summarySheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Summary");
+    summarySheet.getRange(2,2,transactions.length, transactions.length).setValues(transactions);
+    
+    
+  }
+  
+
+ 
+
+  //getIndexOfPerson(personName, arr)
+  //For each transaction, calculate the totals
+  
+  //Write the 2D array
 }
 
 function getEmptyRow(values){
@@ -52,3 +90,69 @@ function getEmptyRow(values){
   }
   return -1;
 }
+
+function getPeopleFromSheet(){
+  var mySS = SpreadsheetApp.getActiveSpreadsheet();
+  var pplSheet = SpreadsheetApp.setActiveSheet(mySS.getSheetByName("People"));
+  
+  var pplRange = pplSheet.getRange("A1:A");
+  var names = pplRange.getValues();
+  
+  var people = new Array();
+  var i=0;
+  
+  //Get an array of just the people in the range
+  for(i=0;i<names.length;i++){
+    if(names[i] != ""){
+      var nameStr = names[i].toString();
+      Logger.log("New Name: ", nameStr);
+      people.push(nameStr);
+    }
+  }
+  Logger.log("The names of the people are: ", people);
+  return people;
+}
+
+function getIndexOfPerson(personName, arr){
+  var i=0;
+  for(i=0;i<arr.length;i++){
+    if(arr[i] === personName){
+      return i;
+    }
+  }
+  Logger.log("The missing person is: ", personName);
+  return -1;
+}
+
+
+
+
+
+/*
+Comma delimetered code
+
+ for (var row = 0; row < titleAuthorValues.length; row++){
+    var indexOfFirstComma =
+        titleAuthorValues[row][0].indexOf(", ");
+
+    if(indexOfFirstComma >= 0){
+      // Found a comma, so split and update the values in
+      // the values array.
+      var titlesAndAuthors = titleAuthorValues[row][0];
+      
+      // Update the title value in the array.
+      titleAuthorValues[row][0] =
+        titlesAndAuthors.slice(indexOfFirstComma + 2);
+      
+      // Update the author value in the array.
+      titleAuthorValues[row][1] =
+        titlesAndAuthors.slice(0, indexOfFirstComma);
+    }
+  }
+  
+*/
+
+
+
+
+
