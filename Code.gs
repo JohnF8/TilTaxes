@@ -1,62 +1,54 @@
-arr = ["john", "danny", "sam"];
-letters = "abcdefghijklmnopqrstuvwxyz";
-
-//Biller should start on A4 and contine based on the number of people
-  
-
-
-function onOpen(){
-  Logger.log("Starting it up");
-  //Add menu for billing
-  var ui = SpreadsheetApp.getUi().createMenu('Bill').addItem('Bill one person', 'billOne').addItem('Bill multiple people', 'billMultiple').addToUi();
+function defaultPaidField() {
+  return "NO";
 }
 
-
-function billOne(){
-  Logger.log("Billing one person");
-  var html = HtmlService.createHtmlOutputFromFile('BillPage');
-  SpreadsheetApp.getUi().showModalDialog(html, "Bill one person");
-  Logger.log("should be done?");
-} 
-
-
-function sendBillData(biller,p1Val, p2Val, p3Val, amount){
-  Logger.log("The biller is: ", biller);
-  Logger.log("The amount is: ", amount);
+function getPeopleArr(){
+  var mySS = SpreadsheetApp.getActiveSpreadsheet();
+  var pplSheet = SpreadsheetApp.setActiveSheet(mySS.getSheetByName("People"));
   
-  var rowNum = getRowFromArr(biller) + 4;
+  var pplRange = pplSheet.getRange("B2:B20");
+  var names = pplRange.getValues();
+  Logger.log("The names of the people are: ", names);
   
-  if(p1Val == 1){
-      var cell = "B"+rowNum;
-      setValue(cell, getValue(cell)+amount);
-  }
-  
-   if(p2Val == 1){
-      var cell = "C"+rowNum;
-      setValue(cell, getValue(cell)+amount);
-  }
-  
-   if(p3Val == 1){
-      var cell = "D"+rowNum;
-      setValue(cell, getValue(cell)+amount);
-  }
-    
-}
- 
- 
-function getRowFromArr(biller){
-  var i =0;
-   for(i=0; i < arr.length; i++){
-     if(biller === arr[i]){
-       return i;
-     }
-   }
- }
- 
- function getValue(cell) {
-  return SpreadsheetApp.getActiveSheet().getRange(cell).getValue();
+  Logger.log("First person: ", names[1][0]);
 }
 
-function setValue(cell, value) {
-  return SpreadsheetApp.getActiveSheet().getRange(cell).setValue(value);
+function addTransaction(e){
+  addTransactionToSheet(e.values);
+}
+
+function addTransactionToSheet(eventValues){
+  //Example: [6/8/2020 20:06:24, John, Aaron, 1242, memes]
+  var mySS = SpreadsheetApp.getActiveSpreadsheet();
+  var transactionsSheet = mySS.setActiveSheet(mySS.getSheetByName("Transactions"));
+  
+  var curRange = transactionsSheet.getRange('A1:F');
+  Logger.log("Range: ", curRange.getDataRegion().getA1Notation());
+  transactionsSheet.setActiveRange(curRange);
+  
+  transactionValues = curRange.getValues();
+  var lastRow = getEmptyRow(transactionValues);
+ 
+  
+  transactionValues[lastRow+1][0] = eventValues[0];
+  transactionValues[lastRow+1][1] = eventValues[1];
+  transactionValues[lastRow+1][2] = eventValues[2];
+  transactionValues[lastRow+1][3] = eventValues[3];
+  transactionValues[lastRow+1][4] = eventValues[4];
+  transactionValues[lastRow+1][5] = defaultPaidField();
+  
+
+  
+  curRange.setValues(transactionValues);
+}
+
+function getEmptyRow(values){
+  var i = 0;
+  for(i=0;i<values.length;i++){
+    if(values[i][0] === ""){
+      Logger.log("The last value is: ", i);
+      return i;
+    }
+  }
+  return -1;
 }
