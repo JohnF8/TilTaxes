@@ -19,14 +19,6 @@ function onEdit(){
 
 
 /**
- * Defaults the paid field of each transaction in "Transactions" as not paid. 
- */
-function defaultPaidField() {
-  return "NO";
-}
-
-
-/**
  * Trigger for when a Google Form is submitted. 
  */
 function addTransaction(e){
@@ -99,6 +91,9 @@ function populateSummarySheet(transactionsSheet){
 }
 
 
+////// Helper Functions //////
+
+
 /**
  * Defaults the paid field of each transaction in "Transactions" as not paid. 
  */
@@ -151,6 +146,14 @@ function getIndexOfPerson(personName, arr){
   }
   Logger.log("Person not found: ", personName);
   return -1;
+}
+
+
+/**
+ * Defaults the paid field of each transaction in "Transactions" as not paid. 
+ */
+function defaultPaidField() {
+  return "NO";
 }
 
 
